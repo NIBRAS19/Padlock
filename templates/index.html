@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Padlock - A modern password generator & strength analyzer tool for creating secure passwords">
+    <title>Padlock 🔒 - Password Generator & Strength Analyzer</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <!-- Header with modern styling -->
+                <header class="text-center mb-4">
+                    <div class="logo-container mb-2">
+                        <i class="fas fa-shield-alt fa-2x text-primary shield-icon"></i>
+                        <h1 class="display-4 mb-0">
+                            Padlock <span class="badge pulse">🔒</span>
+                        </h1>
+                        <i class="fas fa-key fa-2x text-primary key-icon"></i>
+                    </div>
+                    <p class="tagline lead">A modern password generator & strength analyzer</p>
+                </header>
+
+                <!-- Tabs Container -->
+                <div class="card main-card shadow-lg border-0 mb-4">
+                    <!-- Tab Navigation -->
+                    <div class="card-header p-0">
+                        <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="generate-tab" data-bs-toggle="tab"
+                                    data-bs-target="#generate-pane" type="button" role="tab"
+                                    aria-controls="generate-pane" aria-selected="true">
+                                    <i class="fas fa-key me-2"></i>Generate
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="check-tab" data-bs-toggle="tab"
+                                    data-bs-target="#check-pane" type="button" role="tab" aria-controls="check-pane"
+                                    aria-selected="false">
+                                    <i class="fas fa-shield-alt me-2"></i>Check Strength
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="history-tab" data-bs-toggle="tab"
+                                    data-bs-target="#history-tab-pane" type="button" role="tab"
+                                    aria-controls="history-tab-pane" aria-selected="false">
+                                    <i class="fas fa-history me-2"></i>History
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="saved-tab" data-bs-toggle="tab"
+                                    data-bs-target="#saved-tab-pane" type="button" role="tab"
+                                    aria-controls="saved-tab-pane" aria-selected="false">
+                                    <i class="fas fa-bookmark me-2"></i>Saved
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="myTabContent">
+                        <!-- 1. Generate Password Tab -->
+                        <div class="tab-pane fade show active" id="generate-pane" role="tabpanel"
+                            aria-labelledby="generate-tab">
+                            <div class="card-body">
+                                <!-- Password display with glass effect -->
+                                <div class="password-display mb-4" id="password-display">
+                                    <i class="fas fa-arrow-circle-down opacity-50 me-2"></i>Click "Generate" to create a
+                                    password
+                                </div>
+
+                                <!-- Button row -->
+                                <div class="d-flex justify-content-center mb-3 gap-2">
+                                    <button class="btn btn-outline-primary d-none" id="copy-btn"
+                                        title="Copy to clipboard">
+                                        <i class="bi bi-clipboard me-2"></i>Copy
+                                    </button>
+                                    <button class="btn btn-outline-secondary d-none" id="visibility-btn"
+                                        title="Toggle visibility">
+                                        <i class="bi bi-eye-slash me-2"></i>
+                                    </button>
+                                    <button class="btn btn-outline-warning d-none" id="favorite-btn"
+                                        title="Save password">
+                                        <i class="bi bi-star me-2"></i>Save
+                                    </button>
+                                    <button class="btn btn-outline-success d-none" id="export-btn"
+                                        title="Export password">
+                                        <i class="bi bi-download me-2"></i>Export
+                                    </button>
+                                </div>
+
+                                <!-- Password strength info -->
+                                <div class="crack-time text-center d-none mb-3" id="crack-time">
+                                    It would take a computer about <strong class="strength-0"
+                                        id="time-to-crack">instant</strong> to crack this password.
+                                </div>
+
+                                <!-- Strength meter -->
+                                <div class="progress mb-4 d-none" id="strength-container" style="height: 10px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" id="strength-meter"
+                                        style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+
+                                <!-- Password entropy (for technical users) -->
+                                <div id="entropy-container" class="d-none text-center mb-3">
+                                    <small class="text-muted">Entropy: <span id="entropy-value">0</span></small>
+                                </div>
+
+                                <!-- Generate button -->
+                                <div class="d-grid mb-4">
+                                    <button id="generate-btn" class="btn btn-primary btn-lg btn-generate">
+                                        <i class="fas fa-bolt me-2"></i>Generate Password
+                                    </button>
+                                </div>
+
+                                <!-- Password analysis details -->
+                                <div id="analysis-container" class="card mb-4 d-none">
+                                    <!-- Content will be populated by JavaScript -->
+                                </div>
+
+                                <!-- Options section accordion -->
+                                <div class="accordion" id="passwordOptions">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingOptions">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#collapseOptions" aria-expanded="true"
+                                                aria-controls="collapseOptions">
+                                                Password Generation Options
+                                            </button>
+                                        </h2>
+                                        <div id="collapseOptions" class="accordion-collapse collapse show"
+                                            aria-labelledby="headingOptions">
+                                            <div class="accordion-body">
+                                                <!-- Method selection -->
+                                                <div class="mb-3">
+                                                    <label for="method-select" class="form-label">Generation
+                                                        Method</label>
+                                                    <select class="form-select" id="method-select">
+                                                        <option value="random" selected>Random String</option>
+                                                        <option value="memorable">Memorable Password</option>
+                                                        <option value="pattern">Pattern-based</option>
+                                                        <option value="xkcd">XKCD Style</option>
+                                                        <option value="pin">PIN / Digits Only</option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Pattern input (hidden by default, shown when pattern method is selected) -->
+                                                <div class="mb-3 d-none" id="pattern-container">
+                                                    <label for="pattern-input" class="form-label">Custom Pattern</label>
+                                                    <input type="text" class="form-control" id="pattern-input"
+                                                        value="AvNnD" placeholder="e.g., AvNnD">
+                                                    <div class="form-text">
+                                                        A=Adjective, N=Noun, V=Verb, C=Capital, c=lowercase, D=Digit,
+                                                        S=Symbol
+                                                    </div>
+                                                </div>
+
+                                                <!-- Length slider -->
+                                                <div class="mb-3">
+                                                    <label for="length-slider"
+                                                        class="form-label d-flex justify-content-between">
+                                                        <span>Password Length</span>
+                                                        <span class="badge bg-primary rounded-pill"
+                                                            id="length-value">16</span>
+                                                    </label>
+                                                    <input type="range" class="form-range" id="length-slider" min="6"
+                                                        max="64" value="16">
+                                                </div>
+
+                                                <!-- Character options -->
+                                                <div class="row g-3 mb-2">
+                                                    <div class="col-md-6">
+                                                        <div class="form-check form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="uppercase-check" checked>
+                                                            <label class="form-check-label" for="uppercase-check">
+                                                                Uppercase Letters (A-Z)
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="lowercase-check" checked>
+                                                            <label class="form-check-label" for="lowercase-check">
+                                                                Lowercase Letters (a-z)
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-check form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="digits-check" checked>
+                                                            <label class="form-check-label" for="digits-check">
+                                                                Digits (0-9)
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check form-switch mb-2">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="symbols-check" checked>
+                                                            <label class="form-check-label" for="symbols-check">
+                                                                Symbols (!@#$%^&*)
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Advanced options -->
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="exclude-similar-check">
+                                                            <label class="form-check-label" for="exclude-similar-check">
+                                                                Exclude Similar Characters (l, 1, I, 0, O)
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-check form-switch">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="exclude-ambiguous-check">
+                                                            <label class="form-check-label"
+                                                                for="exclude-ambiguous-check">
+                                                                Exclude Ambiguous Symbols ({ } [ ] ( ) / ' " ` ~ , ; : .
+                                                                <>)
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Auto-generate option -->
+                                                <div class="form-check form-switch mt-3">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="auto-generate-check">
+                                                    <label class="form-check-label" for="auto-generate-check">
+                                                        Auto-generate on page load
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. Check Strength Tab -->
+                        <div class="tab-pane fade" id="check-pane" role="tabpanel" aria-labelledby="check-tab">
+                            <div class="card-body">
+                                <p class="text-center mb-4">Enter your existing password to check its strength</p>
+
+                                <!-- Password input form -->
+                                <form id="check-form" class="mb-4">
+                                    <div class="mb-3">
+                                        <div class="input-group">
+                                            <input type="password" class="form-control form-control-lg"
+                                                id="check-password-input" placeholder="Enter your password"
+                                                autocomplete="off">
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                id="check-toggle-password">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <div class="form-text">Your password is not stored or transmitted anywhere.
+                                        </div>
+                                    </div>
+
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-shield-alt me-2"></i>Check Strength
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Results section (initially hidden) -->
+                                <div id="check-results" class="d-none">
+                                    <!-- Strength meter -->
+                                    <div class="mb-4">
+                                        <label class="form-label d-flex justify-content-between">
+                                            <span>Password Strength:</span>
+                                            <span id="check-strength-text">Not evaluated</span>
+                                        </label>
+                                        <div class="progress" style="height: 12px;">
+                                            <div id="check-strength-meter" class="progress-bar" role="progressbar"
+                                                style="width: 0%;" aria-valuenow="0" aria-valuemin="0"
+                                                aria-valuemax="100"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Crack time -->
+                                    <div class="alert alert-info mb-4" id="check-time-alert">
+                                        It would take a computer about <strong id="check-time-to-crack">instant</strong>
+                                        to crack this password.
+                                    </div>
+
+                                    <!-- Feedback -->
+                                    <div class="card mb-3">
+                                        <div class="card-header" id="check-result-header">
+                                            <h3 class="mb-0 fs-5">Improvement Tips</h3>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul id="check-feedback-list" class="list-group list-group-flush"></ul>
+                                        </div>
+                                    </div>
+
+                                    <!-- Advanced Analysis Button -->
+                                    <button id="advanced-analysis-btn" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-microscope me-2"></i>Show Advanced Analysis
+                                    </button>
+
+                                    <!-- Advanced Analysis Section (hidden by default) -->
+                                    <div id="advanced-analysis" class="mt-4 d-none">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h3 class="mb-0 fs-5">Advanced Analysis</h3>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="advanced-analysis-content">
+                                                    <!-- Content will be populated by JavaScript -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. History Tab -->
+                        <div class="tab-pane fade" id="history-tab-pane" role="tabpanel" aria-labelledby="history-tab">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h3 class="fs-5 mb-0">Recently Generated Passwords</h3>
+                                    <div class="btn-group">
+                                        <button id="export-session-btn" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-download me-1"></i>Export All
+                                        </button>
+                                        <button id="clear-history-btn" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash me-1"></i>Clear History
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="password-history">
+                                    <!-- Will be populated by JavaScript -->
+                                    <div class="text-center text-muted py-3">
+                                        No recent passwords
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Saved Passwords Tab -->
+                        <div class="tab-pane fade" id="saved-tab-pane" role="tabpanel" aria-labelledby="saved-tab">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h3 class="fs-5 mb-0">Saved Passwords</h3>
+                                    <button id="export-saved-btn" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-download me-1"></i>Export All
+                                    </button>
+                                </div>
+                                <div id="saved-passwords">
+                                    <!-- Will be populated by JavaScript -->
+                                    <div class="text-center text-muted py-3">
+                                        No saved passwords
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Cards -->
+                <div class="row g-4">
+                    <!-- Security Tips Card -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-secondary bg-opacity-25">
+                                <h3 class="mb-0 fs-5"><i class="fas fa-info-circle me-2"></i>Password Security Tips</h3>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">Use a different password for each important account</li>
+                                    <li class="list-group-item">Consider using a password manager to store your
+                                        passwords</li>
+                                    <li class="list-group-item">Enable two-factor authentication when available</li>
+                                    <li class="list-group-item">Change your passwords periodically</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- What Makes a Strong Password Card -->
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-secondary bg-opacity-25">
+                                <h3 class="mb-0 fs-5"><i class="fas fa-lock me-2"></i>What Makes a Strong Password?</h3>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">At least 12 characters in length</li>
+                                    <li class="list-group-item">Mix of uppercase and lowercase letters</li>
+                                    <li class="list-group-item">Includes numbers and special characters</li>
+                                    <li class="list-group-item">Avoid using personal information or common words</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="mt-5 text-center text-muted">
+                    <h5>Crafted with 💝 by <a href="#" class="">NIBRAS</a> | 🔓 Open-Source on <a href="#" class="">GITHUB</a></h5>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast for notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="copy-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toast-text">
+                Password copied to clipboard!
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/password_evaluator.js') }}"></script>
+</body>
+
+</html>
